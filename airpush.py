@@ -94,9 +94,4 @@ except Exception as e:
 
 logger.info("Data loaded successfully for %s" % all_cids)
 
-'''
-logger.error(req.text)
-print ("API call failed: %s" % e)
-create_error_file()
-logger.info("Ending OPT APPLICATION3 for process date %s" % process_date)
-'''
+
