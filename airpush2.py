@@ -68,27 +68,25 @@ hour = all_hours[0]
 print hour
 
 # For each campaingID, get the optimizer data
-all_hours=['00']
-all_cids='2015836'
-count=0
+
 for hour in all_hours:
     try:
         url = "http://openapi.airpush.com/getCampaignOptimizerData?apikey=%s&startDate=%s&endDate=%s&campaignIds=%s&reportType=hour&DRILLDOWN=application&hour=%s" % (
             apikey, process_date, end_date, all_cids, hour)
         req = requests.get(url)
         print url
-        while req.status_code != 200 and count<5:
-            print ('The hour is %s' % hour)
-            for subitem in req.json():
-                with open(opt_application, 'a') as output_file:
-                    output_file.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ( \
-                        subitem['hour'], subitem['app'], item2, subitem['publisher'], subitem['push'], \
-                        subitem['click'], subitem['ctr'], subitem['cpc'], subitem['conversion'], \
-                        subitem['conversionrate'], subitem['cpa'], subitem["SOV%"]))
-            count = count + 1
-            break
-        else:
-            logger.error("Status: %s. Retrying." % req.status_code)
+        while True:
+            if req.status_code == 200:
+                print ('The hour is %s' % hour)
+                for subitem in req.json():
+                    with open(opt_application, 'a') as output_file:
+                        output_file.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ( \
+                            subitem['hour'], subitem['app'], item2, subitem['publisher'], subitem['push'], \
+                            subitem['click'], subitem['ctr'], subitem['cpc'], subitem['conversion'], \
+                            subitem['conversionrate'], subitem['cpa'], subitem["SOV%"]))
+                break
+            else:
+                logger.error("Status: %s. Retrying." % req.status_code)
     except Exception as e:
         logger.error("Error fetching Optimizer Application data: %s" % e)
 
