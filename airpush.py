@@ -1,8 +1,6 @@
 """
 This script calls the optimizer APIs and enerates the CSVs files.
-
 req.json() ->
-
 {u'2006570': [{u'SOV%': u'0.16',
                u'app': 321589,
                u'click': 1,
@@ -27,9 +25,7 @@ req.json() ->
                u'push': 19},
             ]
 }
-
 subitem ->
-
 {u'SOV%': u'2.86',
   u'app': 288655,
   u'click': 0,
@@ -42,7 +38,6 @@ subitem ->
   u'publisher': 246565,
   u'push': 8
 }
-
 """
 
 import datetime
@@ -56,7 +51,7 @@ from requests.exceptions import ConnectionError, Timeout
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('/Users/Miha/Documents/PythonScripts/Airpush/log_%s.log' % time.strftime("%Y-%m-%d"))
+fh = logging.FileHandler('C:\IN_ORA\Quick Solutions\DSP\AIRPUSH\log_%s.log' % time.strftime("%Y-%m-%d"))
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 fh.setFormatter(formatter)
 fh.setLevel(logging.DEBUG)
@@ -73,21 +68,21 @@ logger.info("Starting OPT APPLICATION per hour for process date %s" % process_da
 
 # Clean error.txt if exists
 try:
-    os.remove('/Users/Miha/Documents/PythonScripts/Airpush/error.txt')
+    os.remove('C:\IN_ORA\Quick Solutions\DSP\AIRPUSH\error.txt')
 except Exception as e:
     pass
 
 
 # Function to create an empty file
 def create_error_file():
-    with open('/Users/Miha/Documents/PythonScripts/Airpush/error.txt', 'w') as err:
+    with open('C:\IN_ORA\Quick Solutions\DSP\AIRPUSH\error.txt', 'w') as err:
         err.write('')
 
 
 process_date = datetime.datetime.strptime(sys.argv[1], '%Y-%m-%d').date()
 end_date = process_date
 
-opt_application = '/Users/Miha/Documents/PythonScripts/Airpush/opt_application_%s.csv' % process_date
+opt_application = 'C:\IN_ORA\Quick Solutions\DSP\AIRPUSH\opt_application_%s.csv' % process_date
 
 with open(opt_application, 'w') as output_file:
     output_file.write(
@@ -107,26 +102,29 @@ except Exception as e:
 
 all_cids=','.join(cids)
 all_hours=['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
-
+print all_cids
 
 # do a request for each hour in a day
 for hour in all_hours:
+    time.sleep(6)
     count=1
     url="http://openapi.airpush.com/getCampaignOptimizerData?apikey=%s&startDate=%s&endDate=%s&campaignIds=%s&reportType=hour&DRILLDOWN=application&hour=%s" % (
         apikey, process_date, end_date, all_cids, hour)
     req=requests.get(url)
+    print url
 
-    # if the HTTP status is not 200, wait 10 sec and retry
-    while req.status_code != 200 and count <= 3:
-        logger.info("Sleeping for 10 seconds and retrying...")
-        time.sleep(10)
-        req=requests.get(url)
-        count+=1
-
-    if count == 3:
-        create_error_file()
-        logger.error("Too many retries. Failed to create a request.")
-        sys.exit(1)
+    # if the HTTP status is not 200, do retry
+    while True:
+        req = requests.get(url)
+        if req.status_code != 200 and count <= 5:
+            logger.info("Retrying...")
+            count += 1
+            continue
+        elif count == 5:
+            create_error_file()
+            logger.error("Too many retries. Failed to create a request.")
+            sys.exit(1)
+        break
 
     # go through all campaign IDs and write to file the specified fields
     for cid in cids:
